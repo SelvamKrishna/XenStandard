@@ -1,0 +1,5 @@
+.vscode/
+build/
+test/
+compile_flags.txt
+makefile

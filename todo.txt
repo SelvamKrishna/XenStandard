@@ -1,0 +1,32 @@
+# -> to-do
+? -> un-tested
+
+( All tasks are ordered in priority <most : up , least : down> )
+
+----------------------
+. xen::str / str (?)
+
+	(#) > xen::owned_ptr for safer memory management
+	> String manipulation: 
+		(#) > Concatination 
+		(#) > Trimming
+
+----------------------
+. xen::err_ctx / err (?)
+
+	(#) > xen::f_str support for err_ctx construction
+
+----------------------
+. xen::owned_ptr<T> / core (?)(#)
+
+	> ptr which holds ownership of the underlying memory
+	> follows RAII principles, smart memory management
+	> can only be moved
+
+----------------------
+. xen::safe_u64 / core (?)
+
+----------------------
+. xen::opt<T> / core (?)
+
+	> container to represent data which may or may not exist
