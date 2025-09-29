@@ -3,14 +3,20 @@
 #ifndef XEN_STR
 #define XEN_STR
 
+#include "core/numdef.hpp"
 #include "core/safe_u64.hpp"
-
-#include <cstring>
-#include <ostream>
 
 namespace xen {
 
-/// @class str
+/// @return the length of the given text (w/o the `\0`)
+[[nodiscard]] inline s_size get_text_len(const char* text) noexcept {
+	const char* START = text;
+	while (*text != '\0') { ++text; }
+
+	return s_size{static_cast<u64_t>(START - text)};
+}
+
+/// @class `str`
 /// @brief A safe dynamic array of characters.
 /// @section Features:
 /// - Smart memory management of the character buffer.
@@ -19,7 +25,6 @@ namespace xen {
 /// - Supports implicit/explicit conversion from `const char*`.
 /// - Supports ostream `<<` operator for displaying underlying string.
 ///
-/// TODO: Implement `xen:owned_ptr` for memory handling
 /// TODO: String manipulation support
 /// UNTESTED:
 class str {
@@ -27,19 +32,29 @@ private:
 	char* _character_buf {nullptr};
 	s_size _len;
 
+	/// @warning `_len` and `_character_buf` to be manually set before calling
+	constexpr void _raw_copy_text(const char* text) noexcept {
+		char* dest = _character_buf;
+		while ((*dest = *text) != '\0') {
+			++dest;
+			++text;
+		}
+	}
+
+	/// @details copies raw c-style string to self
+	void _copy_text(const char* text) noexcept {
+		delete[] _character_buf;
+
+		_len = get_text_len(text);
+		_character_buf = new char[_len + 1];
+		_raw_copy_text(text);
+	}
+
 public:
 	[[nodiscard]] constexpr str() noexcept = default;
 
-	[[nodiscard]] constexpr str(const char* text) noexcept {
-		if (text == nullptr) { // Empty string
-			_len = 0;
-			_character_buf = new char[1];
-			_character_buf[0] = '\0';
-		} else { // Proper string
-			_len = std::strlen(text);
-			_character_buf = new char[_len + 1];
-			strcpy_s(_character_buf, _len + 1, text);
-		}
+	[[nodiscard]] str(const char* text) noexcept {
+		_copy_text(text == nullptr ? "" : text);
 	}
 
 	constexpr ~str() noexcept { delete[] _character_buf; }
@@ -50,7 +65,7 @@ public:
 		if (&other != this) [[likely]] {
 			_len = other._len;
 			_character_buf = new char[_len + 1];
-			strcpy_s(_character_buf, _len + 1, other._character_buf);
+			_raw_copy_text(other.c_str());
 		}
 	}
 	
@@ -59,7 +74,7 @@ public:
 			reset();
 			_len = other._len;
 			_character_buf = new char[_len + 1];
-			strcpy_s(_character_buf, _len + 1, other._character_buf);
+			_raw_copy_text(other.c_str());
 		}
 
 		return *this;
@@ -91,15 +106,18 @@ public:
 
 #pragma endregion /// Move semantics
 
+#ifdef _OSTREAM_
 	/// @details Console logging support
 	friend std::ostream& operator<<(std::ostream& os, const str& str) noexcept {
 		os << str._character_buf;
 		return os;
 	}
+#endif
+
 #pragma region /// String utils
 
-	/// @returns Underlying `const char*`.
-	[[nodiscard]] constexpr const char* c_str() const noexcept { return _character_buf; }
+	/// @returns Underlying `char*`.
+	[[nodiscard]] constexpr char* c_str() const noexcept { return _character_buf; }
 
 	/// @returns Total no.of characters in string.
 	[[nodiscard]] constexpr s_size len() const noexcept { return _len; }

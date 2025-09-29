@@ -7,9 +7,9 @@
 
 namespace xen {
 
-/// @enum err
+/// @enum `err`
 /// @brief Represents different categories of runtime errors.
-/// @section Types:
+/// @section Variants:
 /// - Logic          : The program logic does not match the expected logic.
 /// - IndexOutOfRange: Attempt to access outside the bounds of an array or container.
 /// - InvalidArgument: A function received an unsupported or invalid argument.

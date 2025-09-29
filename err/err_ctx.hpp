@@ -3,16 +3,12 @@
 #ifndef XEN_ERR_CTX
 #define XEN_ERR_CTX
 
-#include "core/numdef.hpp"
 #include "err/err.hpp"
 #include "str/str.hpp"
 
-#include <iostream>
-#include <cstdlib>
-#include <ostream>
-
 namespace xen {
-/// @class err_ctx
+
+/// @class `err_ctx`
 /// @brief A class that contains verbose info on the thrown err.
 /// @details Info such as Type and Description of the error is stored.
 ///
@@ -25,18 +21,14 @@ public:
 
 	[[nodiscard]] constexpr err_ctx() noexcept = delete;
 
-	[[nodiscard]] constexpr err_ctx(err type, const char* desc) noexcept : TYPE{type}, DESC{desc} {}
+	[[nodiscard]] err_ctx(err type, const char* desc) noexcept : TYPE{type}, DESC{desc} {}
 
+#ifdef _OSTREAM_
 	friend std::ostream& operator<<(std::ostream& os, const err_ctx& err_ctx) noexcept {
-		os << "[ERR]: " << static_cast<u8_t>(err_ctx.TYPE) << ": " << err_ctx.DESC << std::endl;
+		os << "[ERR]: " << static_cast<u8_t>(err_ctx.TYPE) << ": " << err_ctx.DESC.c_str() << std::endl;
 		return os;
 	}
-
-	/// @details Logs the error message and terminates the program.
-	[[noreturn]] void terminate() const noexcept {
-		std::cerr << this;
-		std::abort();
-	}
+#endif
 };
 
 } /// namespace xen

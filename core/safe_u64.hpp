@@ -8,7 +8,7 @@
 
 namespace xen {
 
-/// @class safe_u64
+/// @class `safe_u64`
 /// @brief A safe wrapper around unsigned 64-bit integers (u64).
 /// @section Features:
 /// - Wraps a raw `u64_t` value.
@@ -29,23 +29,23 @@ private:
 #pragma region // Arithmetic helpers
 
 	/// @returns `true` if the addition doesn't overflow `U64_MAX`.
-	[[nodiscard]] static constexpr bool _is_safe_add_u64(u64_t a, u64_t b) noexcept {
+	[[nodiscard]] static constexpr bool _is_safe_add(u64_t a, u64_t b) noexcept {
 		return a <= (U64_MAX - b);
 	}
 
 	/// @returns `true` if the subtraction doesn't underflow `U64_MIN`
-	[[nodiscard]] static constexpr bool _is_safe_sub_u64(u64_t a, u64_t b) noexcept {
+	[[nodiscard]] static constexpr bool _is_safe_sub(u64_t a, u64_t b) noexcept {
 		return a >= b;
 	}
 
 	/// @returns `true` if the multiplication doesn't overflow `U64_MAX`
-	[[nodiscard]] static constexpr bool _is_safe_mul_u64(u64_t a, u64_t b) noexcept {
+	[[nodiscard]] static constexpr bool _is_safe_mul(u64_t a, u64_t b) noexcept {
 		if (b == 0) return true;
 		return a <= (U64_MAX / b);
 	}
 
 	/// @returns `true` if the divisior is not `0`
-	[[nodiscard]] static constexpr bool _is_safe_div_u64(u64_t, u64_t b) noexcept {
+	[[nodiscard]] static constexpr bool _is_safe_div(u64_t, u64_t b) noexcept {
 		return b != 0;
 	}
 
@@ -76,7 +76,7 @@ public:
 	}
 
 	friend constexpr safe_u64& operator+=(safe_u64& lhs, u64_t rhs) {
-		if (!_is_safe_add_u64(lhs._size, rhs)) throw err::NumOverflow;
+		if (!_is_safe_add(lhs._size, rhs)) throw err::NumOverflow;
 		lhs._size += rhs;
 		return lhs;
 	}
@@ -98,11 +98,11 @@ public:
 	friend constexpr safe_u64& operator+=(safe_u64& lhs, i32_t rhs) {
 		if (rhs < 0) {
 			u64_t sub{static_cast<u64_t>(-static_cast<i64_t>(rhs))};
-			if (!_is_safe_sub_u64(lhs._size, sub)) throw err::NumUnderflow;
+			if (!_is_safe_sub(lhs._size, sub)) throw err::NumUnderflow;
 			lhs._size -= sub;
 		} else {
 			u64_t add{static_cast<u64_t>(rhs)};
-			if (!_is_safe_add_u64(lhs._size, add)) throw err::NumOverflow;
+			if (!_is_safe_add(lhs._size, add)) throw err::NumOverflow;
 			lhs._size += add;
 		}
 
@@ -137,7 +137,7 @@ public:
 	}
 
 	friend constexpr safe_u64& operator-=(safe_u64& lhs, u64_t rhs) {
-		if (!_is_safe_sub_u64(lhs._size, rhs)) throw err::NumUnderflow;
+		if (!_is_safe_sub(lhs._size, rhs)) throw err::NumUnderflow;
 		lhs._size -= rhs;
 		return lhs;
 	}
@@ -148,18 +148,18 @@ public:
 	}
 
 	friend constexpr safe_u64 operator-(u64_t lhs, const safe_u64& rhs) {
-		if (!_is_safe_sub_u64(lhs, rhs._size)) throw err::NumUnderflow;
+		if (!_is_safe_sub(lhs, rhs._size)) throw err::NumUnderflow;
 		return safe_u64{lhs - rhs._size};
 	}
 
 	friend constexpr safe_u64& operator-=(safe_u64& lhs, i32_t rhs) {
 		if (rhs < 0) {
 			u64_t add{static_cast<u64_t>(-static_cast<i64_t>(rhs))};
-			if (!_is_safe_add_u64(lhs._size, add)) throw err::NumOverflow;
+			if (!_is_safe_add(lhs._size, add)) throw err::NumOverflow;
 			lhs._size += add;
 		} else {
 			u64_t sub{static_cast<u64_t>(rhs)};
-			if (!_is_safe_sub_u64(lhs._size, sub)) throw err::NumUnderflow;
+			if (!_is_safe_sub(lhs._size, sub)) throw err::NumUnderflow;
 			lhs._size -= sub;
 		}
 
@@ -174,7 +174,7 @@ public:
 	friend constexpr safe_u64 operator-(i32_t lhs, const safe_u64& rhs) {
 		if (lhs < 0) throw err::NumUnderflow;
 		u64_t left{static_cast<u64_t>(lhs)};
-		if (!_is_safe_sub_u64(left, rhs._size)) throw err::NumUnderflow;
+		if (!_is_safe_sub(left, rhs._size)) throw err::NumUnderflow;
 		return safe_u64{left - rhs._size};
 	}
 
@@ -183,7 +183,7 @@ public:
 #pragma region /// (*) operation
 
 	friend constexpr safe_u64& operator*=(safe_u64& lhs, u64_t rhs) {
-		if (!_is_safe_mul_u64(lhs._size, rhs)) throw err::NumOverflow;
+		if (!_is_safe_mul(lhs._size, rhs)) throw err::NumOverflow;
 		lhs._size *= rhs;
 		return lhs;
 	}
@@ -238,26 +238,26 @@ public:
 
 #pragma region /// Comparison overload
 
-	friend constexpr bool operator==(const safe_u64& a, const safe_u64& b) noexcept { return a._size == b._size; }
-	friend constexpr bool operator!=(const safe_u64& a, const safe_u64& b) noexcept { return a._size != b._size; }
-	friend constexpr bool operator<(const safe_u64& a, const safe_u64& b) noexcept { return a._size < b._size; }
-	friend constexpr bool operator>(const safe_u64& a, const safe_u64& b) noexcept { return a._size > b._size; }
-	friend constexpr bool operator<=(const safe_u64& a, const safe_u64& b) noexcept { return a._size <= b._size; }
-	friend constexpr bool operator>=(const safe_u64& a, const safe_u64& b) noexcept { return a._size >= b._size; }
+	friend constexpr bool operator==(const safe_u64& lhs, const safe_u64& rhs) noexcept { return lhs._size == rhs._size; }
+	friend constexpr bool operator!=(const safe_u64& lhs, const safe_u64& rhs) noexcept { return lhs._size != rhs._size; }
+	friend constexpr bool operator<(const safe_u64& lhs, const safe_u64& rhs) noexcept { return lhs._size < rhs._size; }
+	friend constexpr bool operator>(const safe_u64& lhs, const safe_u64& rhs) noexcept { return lhs._size > rhs._size; }
+	friend constexpr bool operator<=(const safe_u64& lhs, const safe_u64& rhs) noexcept { return lhs._size <= rhs._size; }
+	friend constexpr bool operator>=(const safe_u64& lhs, const safe_u64& rhs) noexcept { return lhs._size >= rhs._size; }
 
-	friend constexpr bool operator==(const safe_u64& a, const i32_t& b) noexcept { return a._size == b; }
-	friend constexpr bool operator!=(const safe_u64& a, const i32_t& b) noexcept { return a._size != b; }
-	friend constexpr bool operator<(const safe_u64& a, const i32_t& b) noexcept { return a._size < b; }
-	friend constexpr bool operator>(const safe_u64& a, const i32_t& b) noexcept { return a._size > b; }
-	friend constexpr bool operator<=(const safe_u64& a, const i32_t& b) noexcept { return a._size <= b; }
-	friend constexpr bool operator>=(const safe_u64& a, const i32_t& b) noexcept { return a._size >= b; }
+	friend constexpr bool operator==(const safe_u64& lhs, const i32_t& rhs) noexcept { return lhs._size == rhs; }
+	friend constexpr bool operator!=(const safe_u64& lhs, const i32_t& rhs) noexcept { return lhs._size != rhs; }
+	friend constexpr bool operator<(const safe_u64& lhs, const i32_t& rhs) noexcept { return lhs._size < rhs; }
+	friend constexpr bool operator>(const safe_u64& lhs, const i32_t& rhs) noexcept { return lhs._size > rhs; }
+	friend constexpr bool operator<=(const safe_u64& lhs, const i32_t& rhs) noexcept { return lhs._size <= rhs; }
+	friend constexpr bool operator>=(const safe_u64& lhs, const i32_t& rhs) noexcept { return lhs._size >= rhs; }
 
-	friend constexpr bool operator==(const i32_t& a, const safe_u64& b) noexcept { return a == b._size; }
-	friend constexpr bool operator!=(const i32_t& a, const safe_u64& b) noexcept { return a != b._size; }
-	friend constexpr bool operator<(const i32_t& a, const safe_u64& b) noexcept { return a < b._size; }
-	friend constexpr bool operator>(const i32_t& a, const safe_u64& b) noexcept { return a > b._size; }
-	friend constexpr bool operator<=(const i32_t& a, const safe_u64& b) noexcept { return a <= b._size; }
-	friend constexpr bool operator>=(const i32_t& a, const safe_u64& b) noexcept { return a >= b._size; }
+	friend constexpr bool operator==(const i32_t& lhs, const safe_u64& rhs) noexcept { return lhs == rhs._size; }
+	friend constexpr bool operator!=(const i32_t& lhs, const safe_u64& rhs) noexcept { return lhs != rhs._size; }
+	friend constexpr bool operator<(const i32_t& lhs, const safe_u64& rhs) noexcept { return lhs < rhs._size; }
+	friend constexpr bool operator>(const i32_t& lhs, const safe_u64& rhs) noexcept { return lhs > rhs._size; }
+	friend constexpr bool operator<=(const i32_t& lhs, const safe_u64& rhs) noexcept { return lhs <= rhs._size; }
+	friend constexpr bool operator>=(const i32_t& lhs, const safe_u64& rhs) noexcept { return lhs >= rhs._size; }
 
 #pragma endregion /// Comparison overload
 };
