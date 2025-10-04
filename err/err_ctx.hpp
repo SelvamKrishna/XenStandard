@@ -10,10 +10,7 @@ namespace xen {
 
 /// @class `err_ctx`
 /// @brief A class that contains verbose info on the thrown err.
-/// @details Info such as Type and Description of the error is stored.
-///
 /// TODO: xen::f_str support
-/// UNTESTED:
 class err_ctx {
 public:
 	const err TYPE {err::Logic};
@@ -23,12 +20,12 @@ public:
 
 	[[nodiscard]] err_ctx(err type, const char* desc) noexcept : TYPE{type}, DESC{desc} {}
 
-#ifdef _OSTREAM_
+	#ifdef _OSTREAM_
 	friend std::ostream& operator<<(std::ostream& os, const err_ctx& err_ctx) noexcept {
 		os << "[ERR]: " << static_cast<u8_t>(err_ctx.TYPE) << ": " << err_ctx.DESC.c_str() << std::endl;
 		return os;
 	}
-#endif
+	#endif /// _OSTREAM_
 };
 
 } /// namespace xen

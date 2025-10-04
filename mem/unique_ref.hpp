@@ -15,8 +15,6 @@ namespace xen {
 /// - Automatically frees memory when the pointer goes out of unique
 /// - Underlying data cannot be copied, but can be moved
 /// - Operator overloaded to behave just like a raw pointer
-///
-/// UNTESTED:
 template <typename T_>
 class unique_ref {
 private:
@@ -32,14 +30,12 @@ public:
 	constexpr ~unique_ref() noexcept { delete _ptr; }
 
 #pragma endregion /// Constructors & Destructors
-
 #pragma region /// Copy semantics
 
 	[[nodiscard]] constexpr unique_ref(const unique_ref&) noexcept = delete;
 	constexpr unique_ref& operator=(const unique_ref&) noexcept = delete;
 
 #pragma endregion /// Copy semantics
-
 #pragma region /// Move semantics
 
 	[[nodiscard]] constexpr unique_ref(unique_ref&& other) noexcept : _ptr{other.release()} {}
@@ -54,7 +50,6 @@ public:
 	}
 
 #pragma endregion /// Move semantics
-
 #pragma region /// Ownership utils
 
 	/// @details Releases ownership of underlying data
@@ -75,10 +70,9 @@ public:
 
 	/// @warning Unsafe operation
 	/// @returns pointer to the underlying data
-	[[nodiscard]] constexpr T_* get() const noexcept { return _ptr; }
+	[[nodiscard]] constexpr T_* get_ptr() const noexcept { return _ptr; }
 
 #pragma endregion /// Ownership utils
-
 #pragma region /// Operator overload
 
 	constexpr T_& operator*() const noexcept { return *_ptr; }

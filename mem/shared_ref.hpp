@@ -18,29 +18,31 @@ namespace xen {
 /// - Underlying data can be copied and moved safely
 /// - Operator overloaded to behave just like a raw pointer
 /// - Can be compared with other `shared_ref` (`==`, `!=`)
-///
-/// UNTESTED:
 template <typename T_>
 class shared_ref {
 private:
 	T_* _ptr{nullptr};
-	s_size* _share_count{nullptr};
+	u_size* _shared_ref_count{nullptr};
+
+#pragma region /// Helpers
 
 	/// @details Increments the `_share_count`
-	constexpr void _add_owner() noexcept { if (_share_count != nullptr) [[likely]] ++(*_share_count); }
+	constexpr void _add_owner() noexcept { if (_shared_ref_count != nullptr) [[likely]] ++(*_shared_ref_count); }
 
 	/// @details Decrements the `_share_count`, resets members and frees them if `_share_count == 0`
 	constexpr void _remove_owner() noexcept {
-		if (_share_count == nullptr) [[unlikely]] return;
+		if (_shared_ref_count == nullptr) [[unlikely]] return;
 
-		if (--(*_share_count) == 0) {
+		if (--(*_shared_ref_count) == 0) {
 			delete _ptr;
-			delete _share_count;
+			delete _shared_ref_count;
 		}
 
 		_ptr = nullptr;
-		_share_count = nullptr;
+		_shared_ref_count = nullptr;
 	}
+
+#pragma endregion /// Helpers
 
 public:
 #pragma region /// Constructors & Destructors
@@ -49,7 +51,7 @@ public:
 
 	[[nodiscard]] constexpr explicit shared_ref(T_* ptr) noexcept 
 	: _ptr{ptr}
-	, _share_count{ptr != nullptr ? new s_size{1} : nullptr} 
+	, _shared_ref_count{ptr != nullptr ? new u_size{1} : nullptr} 
 	{}
 
 	constexpr ~shared_ref() noexcept {
@@ -58,11 +60,10 @@ public:
 	}
 
 #pragma endregion /// Constructors & Destructors
-
 #pragma region /// Copy semantics
 
 	[[nodiscard]] constexpr shared_ref(const shared_ref& other) noexcept 
-	: _ptr{other._ptr}, _share_count{other._share_count} {
+	: _ptr{other._ptr}, _shared_ref_count{other._shared_ref_count} {
 		if (other._ptr != nullptr) [[likely]] _add_owner();
 	}
 
@@ -70,7 +71,7 @@ public:
 		if (this != &other) {
             _remove_owner();
             _ptr = other._ptr;
-            _share_count = other._share_count;
+            _shared_ref_count = other._shared_ref_count;
             _add_owner();
         }
 
@@ -78,27 +79,27 @@ public:
 	}
 
 #pragma endregion /// Copy semantics
-
 #pragma region /// Move semantics
 
 	[[nodiscard]] constexpr shared_ref(shared_ref&& other) noexcept
-	: _ptr{other._ptr}, _share_count{other._share_count} {
-        other._ptr = other._share_count = nullptr;
+	: _ptr{other._ptr}, _shared_ref_count{other._shared_ref_count} {
+        other._ptr = nullptr;
+		other._shared_ref_count = nullptr;
     }
 
 	constexpr shared_ref& operator=(shared_ref&& other) noexcept {
 		if (&other != this) [[likely]] {
 			_remove_owner();
 			_ptr = other._ptr;
-			_share_count = other._share_count;
-			other._ptr = other._share_count = nullptr;
+			_shared_ref_count = other._shared_ref_count;
+			other._ptr = nullptr;
+			other._shared_ref_count = nullptr;
 		}
 
 		return *this;
 	}
 
 #pragma endregion /// Move semantics
-
 #pragma region /// Ownership utils
 
 	/// @details Removes shared_ref from holding ownership to data
@@ -107,21 +108,20 @@ public:
 
 		if (ptr != nullptr) {
 			_ptr = ptr;
-			_share_count = new s_size{1};
+			_shared_ref_count = new u_size{1};
 		}
 	}
 
 	/// @warning Unsafe operation
 	/// @returns pointer to the underlying data
-	[[nodiscard]] constexpr T_* get() const noexcept { return _ptr; }
+	[[nodiscard]] constexpr T_* get_ptr() const noexcept { return _ptr; }
 
 	/// @returns the total number of shared owners
-	[[nodiscard]] constexpr s_size get_count() const noexcept {
-		return _share_count == nullptr ? s_size{0} : (*_share_count);
+	[[nodiscard]] constexpr u_size get_shared_ref_count() const noexcept {
+		return _shared_ref_count == nullptr ? u_size{0} : (*_shared_ref_count);
 	}
 
 #pragma endregion /// Ownership utils
-
 #pragma region /// Operator overload
 
 	constexpr T_& operator*() const noexcept { return *_ptr; }
@@ -129,8 +129,8 @@ public:
 
 	constexpr operator bool() const noexcept { return _ptr != nullptr; }
 
-	friend constexpr bool operator==(const shared_ref& a, const shared_ref& b) noexcept { return a._ptr == b._ptr; }
-	friend constexpr bool operator!=(const shared_ref& a, const shared_ref& b) noexcept { return a._ptr != b._ptr; }
+	friend constexpr bool operator==(const shared_ref& lhs, const shared_ref& rhs) noexcept { return lhs._ptr == rhs._ptr; }
+	friend constexpr bool operator!=(const shared_ref& lhs, const shared_ref& rhs) noexcept { return lhs._ptr != rhs._ptr; }
 
 #pragma endregion /// Operator overload
 };

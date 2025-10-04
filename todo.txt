@@ -5,24 +5,16 @@
 (#) UPDATE 'todo.txt' BEFORE EVERY COMMIT
 
 ----------------------
-. mem / xen::refernce_counter (?)
+. mem / xen::observed_ref<T>
 
-	(#) Keeps track of the number of strong and weak reference
-		. destroyed when strong and weak counts are 0
-
-----------------------
-. mem / xen::observed_ref<T> (?)
-
-	(#) wraps pointer with xen::reference_counter
-		. increment strong count with every xen::observed_ref
-		. destroys data when strong count hits 0
-		. increment weak count with every xen::weak_ref
+	(#) Implement xen::weak_ref support (?)
 
 ----------------------
 . mem / xen::weak_ref<T> (?)
 
-	(#) Fix
+	(#) Core behaviour
 		. implement xen::observed_ref support
+		. implement xen::reference_counter support
 		. observe the strong count to check wether object is destroyed
 
 ----------------------
@@ -31,11 +23,10 @@
 	(#) Non owning slice of a string
 
 ----------------------
-. xen::str / str (?)
+. xen::str / str
 
 	(#) String manipulation: 
-		. Concatination 
-		. Trimming
+		. Trimming (?)
 
 ----------------------
 . xen::err_ctx / err (?)
@@ -43,8 +34,4 @@
 	(#) xen::f_str support for err_ctx construction
 
 ----------------------
-TEST:
-
-. mem / xen:unique_ref<T>
-. mem / xen::shared_ref<T>
-. core / xen::safe_u64
+TEST: (null)
